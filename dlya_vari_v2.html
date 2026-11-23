@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#05060d">
+<title>Для Вари</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;min-height:100%;background:#05060d;color:#fff;font-family:ui-monospace,Menlo,monospace;overflow:hidden}
+body{min-height:100svh}
+#scene{position:relative;width:100%;height:100svh;min-height:570px;overflow:hidden;background:radial-gradient(ellipse at 50% 50%,#17152c 0%,#090b17 52%,#03040a 100%)}
+#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,#ffffff05 4px);opacity:.45}
+.vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse,transparent 35%,#000b 100%)}
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:26px 20px;text-align:center;opacity:0;visibility:hidden;transition:opacity .9s ease,visibility .9s}
+.screen.active{opacity:1;visibility:visible}
+#boot{align-items:flex-start;justify-content:center;flex-direction:column;text-align:left;padding:13vh 9vw}
+.brand{color:#9c9bb9;font-size:10px;letter-spacing:3px;margin-bottom:28px}
+.term{width:100%;max-width:500px;color:#8fffd0;font-size:clamp(11px,3vw,14px);line-height:1.9;text-shadow:0 0 12px #69ffbe66;white-space:pre-wrap;min-height:190px}
+.prompt{color:#d3a5ff}.cursor{display:inline-block;width:8px;height:1em;background:#9fffd1;vertical-align:-2px;animation:blink .7s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.bootbar{width:100%;max-width:500px;height:3px;background:#ffffff18;margin-top:26px;overflow:hidden}
+.bootbar i{display:block;width:0;height:100%;background:#9fffd1;box-shadow:0 0 12px #9fffd1;transition:width .25s}
+.bootpercent{color:#777895;font-size:10px;margin-top:9px}
+#glitch{font-family:Georgia,serif;font-size:clamp(30px,9vw,52px);letter-spacing:2px;color:#fff;text-shadow:3px 0 #ff5c9c,-3px 0 #64eaff;animation:glitch .18s infinite alternate}
+@keyframes glitch{0%{transform:translate(1px,-1px);filter:hue-rotate(0)}50%{transform:translate(-2px,1px)}100%{transform:translate(1px,2px);filter:hue-rotate(35deg)}}
+.small{font-size:10px;letter-spacing:3px;color:#b5a9d8;margin-top:22px}
+#message{font-family:Georgia,serif;font-size:clamp(25px,7vw,39px);line-height:1.35;max-width:520px;text-shadow:0 0 24px #d78dff55}
+#message .line{display:block;opacity:0;transform:translateY(20px);transition:all .8s}
+#message .line.show{opacity:1;transform:translateY(0)}
+#final{flex-direction:column;gap:0}
+#bouquet{width:min(90vw,390px);height:auto;overflow:visible;filter:drop-shadow(0 12px 25px #ff86bf35)}
+.stem{stroke-dasharray:300;stroke-dashoffset:300;transition:stroke-dashoffset 1.3s ease}
+.stem.draw{stroke-dashoffset:0}
+.petals{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(.08) rotate(-40deg);transition:transform .8s cubic-bezier(.2,1.5,.4,1),opacity .5s}
+.petals.bloom{opacity:1;transform:scale(1) rotate(0)}
+#final h1{font-family:Georgia,serif;font-size:clamp(31px,9vw,49px);font-weight:400;margin:0 0 8px;opacity:0;transform:translateY(16px);transition:1s;text-shadow:0 0 28px #ff83bb66}
+#final h1.show{opacity:1;transform:none}
+#final p{font-family:Georgia,serif;font-style:italic;color:#e8d7ed;font-size:17px;line-height:1.5;max-width:330px;margin:6px auto 0;opacity:0;transition:1s .3s}
+#final p.show{opacity:1}
+#final .signature{font-size:9px;letter-spacing:3px;color:#a99ab9;margin-top:25px;opacity:0;transition:1s .7s}
+#final .signature.show{opacity:1}
+button{margin-top:22px;border:1px solid #f3b9dc77;background:#ffffff0c;color:#fff;border-radius:30px;padding:13px 21px;font:inherit;font-size:11px;letter-spacing:1px;opacity:0;transition:opacity .8s;backdrop-filter:blur(8px)}
+button.show{opacity:1}button:active{transform:scale(.96)}
+#hint{position:absolute;bottom:22px;left:0;right:0;text-align:center;color:#77758d;font-size:9px;letter-spacing:2px;opacity:0;transition:opacity 1s}
+#hint.show{opacity:1}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.flash.go{animation:flash .65s ease-out}
+@keyframes flash{0%{opacity:0}12%{opacity:.9}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="scene">
+ <canvas id="fx"></canvas><div class="scan"></div><div class="vignette"></div><div class="flash" id="flash"></div>
+ <section class="screen active" id="boot">
+  <div class="brand">UNKNOWN SIGNAL // INCOMING TRANSMISSION</div>
+  <div class="term" id="term"></div><div class="bootbar"><i id="bar"></i></div><div class="bootpercent" id="percent">INITIALIZING 0%</div>
+ </section>
+ <section class="screen" id="glitchscreen"><div><div id="glitch">СИГНАЛ НАЙДЕН</div><div class="small">DECODING A VERY IMPORTANT MESSAGE...</div></div></section>
+ <section class="screen" id="messageScreen"><div id="message">
+  <span class="line">Среди миллиардов людей…</span>
+  <span class="line">сотен тысяч случайностей…</span>
+  <span class="line">и бесконечного количества дорог…</span>
+  <span class="line">я бы всё равно выбрал тебя.</span>
+ </div></section>
+ <section class="screen" id="final">
+  <svg id="bouquet" viewBox="0 0 360 270" aria-label="Букет цветов">
+   <defs>
+    <linearGradient id="wrap" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f5d6e8"/><stop offset="1" stop-color="#9877ae"/></linearGradient>
+    <radialGradient id="pink"><stop stop-color="#fff0f5"/><stop offset=".65" stop-color="#ff9fc7"/><stop offset="1" stop-color="#d95c98"/></radialGradient>
+    <radialGradient id="rose"><stop stop-color="#ffe4a6"/><stop offset=".3" stop-color="#ffb1d0"/><stop offset="1" stop-color="#e36caa"/></radialGradient>
+   </defs>
+   <g fill="none" stroke="#76bd91" stroke-width="4" stroke-linecap="round">
+    <path class="stem" d="M180 208Q135 140 90 75"/><path class="stem" d="M180 208Q180 130 180 54"/><path class="stem" d="M180 208Q225 140 270 80"/>
+    <path class="stem" d="M170 182Q130 140 120 118"/><path class="stem" d="M190 177Q230 142 245 119"/>
+   </g>
+   <g fill="#68b985"><path d="M143 155q-40-38-55-12 22 33 55 12"/><path d="M215 155q40-38 55-12-22 33-55 12"/><path d="M165 130q-32-37-48-17 20 32 48 17"/></g>
+   <g class="petals" style="transition-delay:.1s" transform="translate(90 72)">
+    <g fill="url(#pink)"><ellipse cy="-14" rx="12" ry="22"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(45)"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(90)"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(135)"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(180)"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(225)"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(270)"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(315)"/></g><circle r="8" fill="#ffe4a6"/>
+   </g>
+   <g class="petals" style="transition-delay:.35s" transform="translate(180 52)">
+    <g fill="url(#rose)"><ellipse cy="-15" rx="13" ry="23"/><ellipse cy="-15" rx="13" ry="23" transform="rotate(45)"/><ellipse cy="-15" rx="13" ry="23" transform="rotate(90)"/><ellipse cy="-15" rx="13" ry="23" transform="rotate(135)"/><ellipse cy="-15" rx="13" ry="23" transform="rotate(180)"/><ellipse cy="-15" rx="13" ry="23" transform="rotate(225)"/><ellipse cy="-15" rx="13" ry="23" transform="rotate(270)"/><ellipse cy="-15" rx="13" ry="23" transform="rotate(315)"/></g><circle r="8" fill="#ffe4a6"/>
+   </g>
+   <g class="petals" style="transition-delay:.6s" transform="translate(270 77)">
+    <g fill="url(#pink)"><ellipse cy="-14" rx="12" ry="22"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(45)"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(90)"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(135)"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(180)"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(225)"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(270)"/><ellipse cy="-14" rx="12" ry="22" transform="rotate(315)"/></g><circle r="8" fill="#ffe4a6"/>
+   </g>
+   <path d="M118 158Q180 183 242 158L211 249Q180 265 149 249Z" fill="url(#wrap)" opacity=".95"/>
+   <path d="M118 158Q180 190 242 158" fill="none" stroke="#fff0fa" stroke-width="3"/>
+   <path d="M180 217q-25-19-35 3 14 21 35-3 21 24 35 3-10-22-35-3Z" fill="#e98db9"/>
+  </svg>
+  <h1 id="headline">Варя, я люблю тебя <span style="color:#ff9abd">♥</span></h1>
+  <p id="dedication">Ты — моё самое любимое совпадение.</p>
+  <div class="signature" id="sign">С ЛЮБОВЬЮ. ТОЛЬКО ДЛЯ ТЕБЯ.</div>
+  <button id="replay">ПРОСМОТРЕТЬ ЕЩЁ РАЗ ↻</button>
+ </section>
+ <div id="hint">TURN UP THE SOUND OF YOUR HEART ♥</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const screens=['boot','glitchscreen','messageScreen','final'];
+function show(id){screens.forEach(s=>$(s).classList.toggle('active',s===id))}
+const lines=[
+'> establishing secure connection...',
+'> searching database: "the most important person"',
+'> match found: VARЯ',
+'> loading memories...',
+'> compiling one very important message',
+'> status: LOVE.exe is running'
+];
+let runToken=0;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function typeBoot(token){
+ $('term').innerHTML='';$('bar').style.width='0%';$('percent').textContent='INITIALIZING 0%';
+ for(let i=0;i<lines.length;i++){
+  if(token!==runToken)return;
+  const row=document.createElement('div');row.textContent='';$('term').appendChild(row);
+  for(const ch of lines[i]){if(token!==runToken)return;row.textContent+=ch;await sleep(17)}
+  await sleep(180);let p=Math.round((i+1)/lines.length*100);$('bar').style.width=p+'%';$('percent').textContent='INITIALIZING '+p+'%';
+ }
+ await sleep(700);if(token!==runToken)return;
+ $('flash').classList.remove('go');void $('flash').offsetWidth;$('flash').classList.add('go');
+ show('glitchscreen');await sleep(1800);if(token!==runToken)return;
+ show('messageScreen');
+ const msg=[...$('message').querySelectorAll('.line')];
+ for(const line of msg){if(token!==runToken)return;line.classList.add('show');await sleep(950)}
+ await sleep(800);if(token!==runToken)return;
+ $('flash').classList.remove('go');void $('flash').offsetWidth;$('flash').classList.add('go');
+ show('final');
+ document.querySelectorAll('.stem').forEach(x=>x.classList.add('draw'));
+ await sleep(450);document.querySelectorAll('.petals').forEach(x=>x.classList.add('bloom'));
+ await sleep(1200);$('headline').classList.add('show');await sleep(450);$('dedication').classList.add('show');$('sign').classList.add('show');$('replay').classList.add('show');$('hint').classList.add('show');
+}
+function reset(){
+ runToken++;const t=runToken;show('boot');
+ $('message').querySelectorAll('.line').forEach(x=>x.classList.remove('show'));
+ document.querySelectorAll('.stem').forEach(x=>x.classList.remove('draw'));
+ document.querySelectorAll('.petals').forEach(x=>x.classList.remove('bloom'));
+ ['headline','dedication','sign','replay','hint'].forEach(id=>$(id).classList.remove('show'));
+ typeBoot(t);
+}
+$('replay').addEventListener('click',reset);
+reset();
+
+// Floating light particles and tiny hearts; canvas scales for mobile.
+const c=$('fx'),ctx=c.getContext('2d');let w,h,dpr,particles=[];
+function resize(){dpr=Math.min(devicePixelRatio||1,2);w=c.clientWidth;h=c.clientHeight;c.width=w*dpr;c.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);particles=Array.from({length:65},()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.8+.4,v:Math.random()*.35+.08,a:Math.random()*.55+.15,phase:Math.random()*6}))}
+window.addEventListener('resize',resize);resize();
+function draw(){ctx.clearRect(0,0,w,h);let now=Date.now()/1000;for(const p of particles){p.y-=p.v;if(p.y<-5){p.y=h+5;p.x=Math.random()*w}let alpha=p.a*(.55+.45*Math.sin(now*1.5+p.phase));ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,190,225,${alpha})`;ctx.shadowBlur=10;ctx.shadowColor='#ff9acb';ctx.fill()}ctx.shadowBlur=0;requestAnimationFrame(draw)}draw();
+</script>
+</body></html>
